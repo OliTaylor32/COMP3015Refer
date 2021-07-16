@@ -32,18 +32,14 @@ layout (binding = 0) uniform sampler2D Tex1;
 layout (binding = 1) uniform sampler2D Tex2;
 layout (binding = 2) uniform samplerCube SkyBoxTex;
 
-void main() {
-	vec4 texColor = texture(Tex1, TexCoord);
-	vec4 texColor2 = texture(Tex2, TexCoord);
-	vec3 totalColor = mix(texColor.rgb, texColor2.rgb, texColor2.a);
-
-	vec3 skyColor = texture(SkyBoxTex, normalize(Vec)).rgb;
+vec3 blinnPhong(vec3 totalColor)
+{
 
 	vec3 s = normalize(vec3(LightPosition.xyz - Position));
 	float sDotN = max( dot(s, Normal), 0.0 );
 
-	//vec3 diffuse = Ld * Kd * sDotN * totalColor; //Normal shading
-	vec3 diffuse = Kd * floor(sDotN * levels) * scaleFactor * totalColor; //Cel-shading
+	vec3 diffuse = Ld * Kd * sDotN * totalColor; //Normal shading
+	//vec3 diffuse = Kd * floor(sDotN * levels) * scaleFactor * totalColor; //Cel-shading
 
 	vec3 ambient = La * Ka * totalColor;
 
@@ -54,6 +50,18 @@ void main() {
 		vec3 h = normalize(v + s);
 		specular = Ks * pow(max(dot(h, Normal), 0.0), Shininess);
 	}
+	
+	return (diffuse + ambient + specular); //Normal Shading
+	//return (diffuse + ambient); //Cel-Shading
+}
+
+void main() {
+
+	vec3 skyColor = texture(SkyBoxTex, normalize(Vec)).rgb;
+
+	vec4 texColor = texture(Tex1, TexCoord);
+	vec4 texColor2 = texture(Tex2, TexCoord);
+	vec3 totalColor = mix(texColor.rgb, texColor2.rgb, texColor2.a);
 
 	if(SkyBox == true)
 	{
@@ -64,8 +72,7 @@ void main() {
 			discard;
 		else
 		{
-			//FragColor = vec4((diffuse + ambient + specular), 0.0); //Normal Shading
-			FragColor = vec4((diffuse + ambient), 0.0); //Cel-Shading
+			FragColor = vec4(blinnPhong(totalColor), 0.0); //Normal Shading
 		}
 	}
 

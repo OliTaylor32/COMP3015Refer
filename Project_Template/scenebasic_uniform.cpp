@@ -54,7 +54,7 @@ void SceneBasic_Uniform::initScene()
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texID2);
 
-    angle = glm::radians(90.0f);
+    angle = glm::radians(0.0f);
 
     GLuint cubeTex = Texture::loadHdrCubeMap("../Project_Template/media/texture/cube/pisa-hdr/pisa");
 

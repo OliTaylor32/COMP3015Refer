@@ -24,7 +24,9 @@ uniform mat4 MVP;
 uniform int levels;
 uniform float scaleFactor;
 
-uniform bool SkyBox;
+uniform int RenderMode; //0 - Standard, 1 - Skybox, 2 - point sprites
+
+uniform sampler2D spriteTex;
 
 layout (location = 0) out vec4 FragColor;
 
@@ -63,17 +65,22 @@ void main() {
 	vec4 texColor2 = texture(Tex2, TexCoord);
 	vec3 totalColor = mix(texColor.rgb, texColor2.rgb, texColor2.a);
 
-	if(SkyBox == true)
+	if(RenderMode == 1)
 	{
 		FragColor = vec4(skyColor, 1); //Skybox
 	}
-	else{
+	else if (RenderMode == 0)
+	{
 		if(texColor2.a + texColor.a < 0.15)
 			discard;
 		else
 		{
 			FragColor = vec4(blinnPhong(totalColor), 0.0); //Normal Shading
 		}
+	}
+	else
+	{
+		FragColor = texture(spriteTex, TexCoord);
 	}
 
 }

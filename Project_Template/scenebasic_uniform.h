@@ -30,6 +30,12 @@ private:
 
     SkyBox sky;
 
+    GLuint sprites;
+    int numSprites;
+    float* locations;
+
+    bool GeometryShader;
+
     void compile();
 
     void setMatrices();

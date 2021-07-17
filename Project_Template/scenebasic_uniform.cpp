@@ -14,6 +14,7 @@ using std::endl;
 #include "helper/glutils.h"
 
 #include "helper/texture.h"
+#include <time.h>
 
 using glm::vec3;
 using glm::mat4;
@@ -26,6 +27,42 @@ void SceneBasic_Uniform::initScene()
 
     glEnable(GL_DEPTH_TEST);
 
+    //Point Textures
+    numSprites = 100;
+    locations = new float[numSprites * 3];
+    srand((unsigned int)time(0));
+
+    for (int i = 1; i < numSprites; i++)
+    {
+        vec3 p(((float)rand() / RAND_MAX * 2.0f) - 1.0f, ((float)rand() / RAND_MAX * 2.0f) - 1.0f, ((float)rand() / RAND_MAX * 2.0f) - 1.0f);
+        locations[i * 3] = p.x;
+        locations[i * 3 + 1] = p.y;
+        locations[i * 3 + 2] = p.z;
+    }
+    //Buffers
+    GLuint handle;
+    glGenBuffers(1, &handle);
+    glBindBuffer(GL_ARRAY_BUFFER, handle);
+    glBufferData(GL_ARRAY_BUFFER, numSprites * 3 * sizeof(float), locations, GL_STATIC_DRAW);
+
+    delete[] locations;
+
+    glGenVertexArrays(1, &sprites);
+    glBindVertexArray(sprites);
+
+    glBindBuffer(GL_ARRAY_BUFFER, handle);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, ((GLubyte*)NULL + (0)));
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+
+    const char* texName = "../Project_Template/media/texture/flower.png";
+    Texture::loadTexture(texName);
+
+    prog.setUniform("SpriteTex", 0);
+    prog.setUniform("Size2", 0.15f);
+
+    //Setting up models and camera views
     model = mat4(1.0f);
 
     model = glm::rotate(model, glm::radians(-35.0f), vec3(1.0f, 0.0f, 0.0f));
@@ -33,7 +70,7 @@ void SceneBasic_Uniform::initScene()
     view = glm::lookAt(vec3(0.0f, 0.0f, 2.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
 
     projection = mat4(1.0f);
-
+    //Lighting and material uniforms
     prog.setUniform("LightPosition", view * glm::vec4(5.0f, 5.0f, 2.0f, 1.0f));
     prog.setUniform("Kd", 1.0f, 1.0f, 1.0f);
     prog.setUniform("Ld", 1.0f, 1.0f, 1.0f);
@@ -45,6 +82,7 @@ void SceneBasic_Uniform::initScene()
     prog.setUniform("levels", 4); //CelShading
     prog.setUniform("scaleFactor", 0.25f); //CelShading (1.0 / levels).
 
+    //Setting up textures for objects
     GLuint texID = Texture::loadTexture("../Project_Template/media/texture/brick1.jpg");
     GLuint texID2 = Texture::loadTexture("../Project_Template/media/texture/moss.png");
 
@@ -54,6 +92,7 @@ void SceneBasic_Uniform::initScene()
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texID2);
 
+    //Setting up The Skybox
     angle = glm::radians(0.0f);
 
     GLuint cubeTex = Texture::loadHdrCubeMap("../Project_Template/media/texture/cube/pisa-hdr/pisa");
@@ -67,6 +106,10 @@ void SceneBasic_Uniform::compile()
 	try {
 		prog.compileShader("shader/basic_uniform.vert");
 		prog.compileShader("shader/basic_uniform.frag");
+        if (GeometryShader == true)
+        {
+            prog.compileShader("shader/basic_uniform.gs");
+        }
 		prog.link();
 		prog.use();
 	} catch (GLSLProgramException &e) {
@@ -110,8 +153,8 @@ void SceneBasic_Uniform::render()
     glUniformMatrix4fv(location, 1, GL_FALSE, &rotationMatrix[0][0]);
 
     setMatrices();
-
-    prog.setUniform("SkyBox", false);
+    GeometryShader = false;
+    prog.setUniform("RenderMode", 0);
     torus.render();
 
     vec3 cameraPos = vec3(7.0f * cos(angle), 2.0f, 7.0f * sin(angle));
@@ -121,8 +164,15 @@ void SceneBasic_Uniform::render()
     prog.use();
     model = mat4(1.0f);
     setMatrices();
-    prog.setUniform("SkyBox", true);
+    prog.setUniform("RenderMode", 1);
     sky.render();
+
+    prog.setUniform("RenderMode", 2);
+    GeometryShader = true;
+    glBindVertexArray(sprites);
+    glDrawArrays(GL_POINTS, 0, numSprites);
+
+    glFinish();
 }
 
 void SceneBasic_Uniform::resize(int w, int h)

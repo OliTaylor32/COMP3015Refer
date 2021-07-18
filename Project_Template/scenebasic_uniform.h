@@ -36,6 +36,8 @@ private:
 
     bool GeometryShader;
 
+    float cutOff;
+
     void compile();
 
     void setMatrices();

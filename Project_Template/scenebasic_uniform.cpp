@@ -16,6 +16,8 @@ using std::endl;
 #include "helper/texture.h"
 #include <time.h>
 
+#include "helper/noisetex.h"
+
 using glm::vec3;
 using glm::mat4;
 
@@ -99,6 +101,13 @@ void SceneBasic_Uniform::initScene()
 
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubeTex);
+
+    //For use in deterioration effect
+    cutOff = 0.0f;
+    prog.setUniform("CutOff", cutOff);
+    GLuint noiseTex = NoiseTex::generate2DTex(6.0f);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, noiseTex);
 }
 
 void SceneBasic_Uniform::compile()
@@ -136,7 +145,14 @@ void SceneBasic_Uniform::update( float t )
     angle += rotSpeed * deltaT;
     if (angle > glm::two_pi<float>())
         angle -= glm::two_pi<float>();
+    
+    cutOff = cutOff + 0.001;
+    prog.setUniform("CutOff", cutOff);
 
+    if (cutOff == 1.0f)
+    {
+        cutOff = 0.0f;
+    }
 }
 
 void SceneBasic_Uniform::render()
@@ -154,7 +170,7 @@ void SceneBasic_Uniform::render()
 
     setMatrices();
     GeometryShader = false;
-    prog.setUniform("RenderMode", 0);
+    prog.setUniform("RenderMode", 3);
     torus.render();
 
     vec3 cameraPos = vec3(7.0f * cos(angle), 2.0f, 7.0f * sin(angle));

@@ -1,5 +1,7 @@
 #version 460
 
+#define PI 3.14159265
+
 in vec3 Position;
 in vec3 Normal;
 in vec2 TexCoord;
@@ -20,19 +22,28 @@ uniform mat4 ModelViewMatrix;
 uniform mat3 NormalMatrix;
 uniform mat4 MVP;
 
-//Toon Shader Uniforms
+//Cel-Shading Uniforms
 uniform int levels;
 uniform float scaleFactor;
 
-uniform int RenderMode; //0 - Standard, 1 - Skybox, 2 - point sprites
+uniform int RenderMode; //0 - Standard, 1 - Skybox, 2 - point sprites, 3 - Noise. 
 
+//For Point Sprites
 uniform sampler2D spriteTex;
+
+//For noise effects
+uniform vec4 Color;
+//uniform sampler2D NoiseTex;
+uniform vec4 BaseColor = vec4(1.0, 1.0, 1.0, 1.0);
+uniform vec4 ErosionColor = vec4(0.0, 0.0, 0.0, 0.0);
+uniform float CutOff;
 
 layout (location = 0) out vec4 FragColor;
 
 layout (binding = 0) uniform sampler2D Tex1;
 layout (binding = 1) uniform sampler2D Tex2;
 layout (binding = 2) uniform samplerCube SkyBoxTex;
+layout (binding = 3) uniform sampler2D NoiseTex;
 
 vec3 blinnPhong(vec3 totalColor)
 {
@@ -57,6 +68,13 @@ vec3 blinnPhong(vec3 totalColor)
 	//return (diffuse + ambient); //Cel-Shading
 }
 
+float NoiseGenerator()
+{
+	vec4 noise = texture(NoiseTex, TexCoord);
+	float t = (cos(noise.a * PI) + 1.0) / 2.0;
+	return (mix(BaseColor, ErosionColor, t)).a;
+}
+
 void main() {
 
 	vec3 skyColor = texture(SkyBoxTex, normalize(Vec)).rgb;
@@ -75,12 +93,21 @@ void main() {
 			discard;
 		else
 		{
-			FragColor = vec4(blinnPhong(totalColor), 0.0); //Normal Shading
+			FragColor = vec4(blinnPhong(totalColor), 0.0);
 		}
+	}
+	else if (RenderMode == 2)
+	{
+		FragColor = texture(spriteTex, TexCoord);
 	}
 	else
 	{
-		FragColor = texture(spriteTex, TexCoord);
+		if(texColor2.a + texColor.a < 0.15 || NoiseGenerator() < CutOff)
+			discard;
+		else
+		{
+			FragColor = vec4(blinnPhong(totalColor), 1.0);
+		}
 	}
 
 }

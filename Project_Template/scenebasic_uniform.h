@@ -42,6 +42,8 @@ private:
 
     void setMatrices();
 
+    bool deterioration;
+
 public:
     SceneBasic_Uniform();
 

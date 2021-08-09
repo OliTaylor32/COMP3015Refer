@@ -18,13 +18,16 @@ using std::endl;
 
 #include "helper/noisetex.h"
 
+#include<iostream>
+
 using glm::vec3;
 using glm::mat4;
 
-SceneBasic_Uniform::SceneBasic_Uniform() : torus(0.7f, 0.3f, 100, 100), angle(0.0f), tPrev(0.0f), rotSpeed(glm::pi<float>() / 8.0f), sky(100.0f) {}
+SceneBasic_Uniform::SceneBasic_Uniform() : torus(0.7f, 0.3f, 100, 100), angle(0.0f), tPrev(0.0f), rotSpeed(glm::pi<float>() / 8.0f), sky(70.0f) {}
 
 void SceneBasic_Uniform::initScene()
 {
+
     compile();
 
     glEnable(GL_DEPTH_TEST);
@@ -108,6 +111,30 @@ void SceneBasic_Uniform::initScene()
     GLuint noiseTex = NoiseTex::generate2DTex(6.0f);
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, noiseTex);
+
+    std::cout << "Would you like to include Cel-Shading? (y for yes, n for no)";
+    char c = std::cin.get();
+    if (c == 'y')
+    {
+        prog.setUniform("CelShade", true);
+    }
+    else
+    {
+        prog.setUniform("CelShade", false);
+    }
+    std::cin.clear();
+    std::cin.ignore();
+
+    std::cout << "Would you like to include Noise based deterioration? (y for yes, n for no)";
+    c = std::cin.get();
+    if (c == 'y')
+    {
+        deterioration = true;
+    }
+    else
+    {
+        deterioration = false;
+    }
 }
 
 void SceneBasic_Uniform::compile()
@@ -145,14 +172,52 @@ void SceneBasic_Uniform::update( float t )
     angle += rotSpeed * deltaT;
     if (angle > glm::two_pi<float>())
         angle -= glm::two_pi<float>();
-    
-    cutOff = cutOff + 0.001;
-    prog.setUniform("CutOff", cutOff);
 
-    if (cutOff == 1.0f)
+    cutOff = cutOff + 0.001;
+    if (deterioration == true)
+    {
+        prog.setUniform("CutOff", cutOff);
+    }
+
+
+    if (cutOff >= 1.0f)
     {
         cutOff = 0.0f;
+        prog.setUniform("CutOff", cutOff);
+
+        char c;
+
+
+        std::cin.clear();
+        std::cin.ignore();
+
+        std::cout << "Would you like to include Cel-Shading? (y for yes, n for no)";
+        c = std::cin.get();
+        if (c == 'y')
+        {
+            prog.setUniform("CelShade", true);
+        }
+        else
+        {
+            prog.setUniform("CelShade", false);
+        }
+
+
+        std::cin.clear();
+        std::cin.ignore();
+
+        std::cout << "Would you like to include Noise based deterioration? (y for yes, n for no)";
+        c = std::cin.get();
+        if (c == 'y')
+        {
+            deterioration = true;
+        }
+        else
+        {
+            deterioration = false;
+        }
     }
+
 }
 
 void SceneBasic_Uniform::render()
@@ -173,8 +238,8 @@ void SceneBasic_Uniform::render()
     prog.setUniform("RenderMode", 3);
     torus.render();
 
-    vec3 cameraPos = vec3(7.0f * cos(angle), 2.0f, 7.0f * sin(angle));
-    view = glm::lookAt(cameraPos, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f,
+    vec3 cameraPos = vec3(7.0f * cos(angle), 0.0f, 7.0f * sin(angle));
+    view = glm::lookAt(cameraPos, vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f,
         0.0f));
     // Draw sky
     prog.use();

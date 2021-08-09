@@ -38,6 +38,8 @@ uniform vec4 BaseColor = vec4(1.0, 1.0, 1.0, 1.0);
 uniform vec4 ErosionColor = vec4(0.0, 0.0, 0.0, 0.0);
 uniform float CutOff;
 
+uniform bool CelShade;
+
 layout (location = 0) out vec4 FragColor;
 
 layout (binding = 0) uniform sampler2D Tex1;
@@ -51,21 +53,27 @@ vec3 blinnPhong(vec3 totalColor)
 	vec3 s = normalize(vec3(LightPosition.xyz - Position));
 	float sDotN = max( dot(s, Normal), 0.0 );
 
-	vec3 diffuse = Ld * Kd * sDotN * totalColor; //Normal shading
-	//vec3 diffuse = Kd * floor(sDotN * levels) * scaleFactor * totalColor; //Cel-shading
-
 	vec3 ambient = La * Ka * totalColor;
-
-	vec3 specular = vec3(0.0);
-	if(sDotN > 0.1)
-	{
-		vec3 v = normalize(-Position);
-		vec3 h = normalize(v + s);
-		specular = Ks * pow(max(dot(h, Normal), 0.0), Shininess);
-	}
 	
-	return (diffuse + ambient + specular); //Normal Shading
-	//return (diffuse + ambient); //Cel-Shading
+	if(CelShade == true)
+	{
+		vec3 diffuse = Kd * floor(sDotN * levels) * scaleFactor * totalColor;
+		return (diffuse + ambient);
+	}
+	else
+	{
+		vec3 specular = vec3(0.0);
+		if(sDotN > 0.1)
+		{
+			vec3 v = normalize(-Position);
+			vec3 h = normalize(v + s);
+			specular = Ks * pow(max(dot(h, Normal), 0.0), Shininess);
+		}
+
+		vec3 diffuse = Ld * Kd * sDotN * totalColor;
+
+		return (diffuse + ambient + specular);
+	}
 }
 
 float NoiseGenerator()

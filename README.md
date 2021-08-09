@@ -4,7 +4,11 @@ Link To Github Page: https://github.com/OliTaylor32/COMP3015Refer
 
 Steps to open project:
 1. Open the "Project_Template" folder
-2. Open the file "Project Template.sln"
+2. Open the file "Project_Template.sln"
+
+For the Standalone .exe file:
+1. Open the "Project_Template" folder
+2. Run the file "Project_Template.exe"
 
 How to interact with the project: 
 On startup, you will be asked whether to add or remove certain shading effects through the terminal. 

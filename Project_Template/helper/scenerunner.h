@@ -15,7 +15,7 @@ class SceneRunner {
 private:
     GLFWwindow * window;
     int fbw, fbh;
-	bool debug = true;           // Set true to enable debug messages
+	bool debug = false;           // Set true to enable debug messages
 
 public:
     SceneRunner(const std::string & windowTitle, int width = WIN_WIDTH, int height = WIN_HEIGHT, int samples = 0) : debug(true) {

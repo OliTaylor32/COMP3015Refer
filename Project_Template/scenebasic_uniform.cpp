@@ -27,7 +27,6 @@ SceneBasic_Uniform::SceneBasic_Uniform() : torus(0.7f, 0.3f, 100, 100), angle(0.
 
 void SceneBasic_Uniform::initScene()
 {
-
     compile();
 
     glEnable(GL_DEPTH_TEST);
@@ -111,7 +110,6 @@ void SceneBasic_Uniform::initScene()
     GLuint noiseTex = NoiseTex::generate2DTex(6.0f);
     glActiveTexture(GL_TEXTURE3);
     glBindTexture(GL_TEXTURE_2D, noiseTex);
-
     std::cout << "Would you like to include Cel-Shading? (y for yes, n for no)";
     char c = std::cin.get();
     if (c == 'y')
@@ -150,6 +148,7 @@ void SceneBasic_Uniform::compile()
 		prog.use();
 	} catch (GLSLProgramException &e) {
 		cerr << e.what() << endl;
+        system("pause");
 		exit(EXIT_FAILURE);
 	}
 }
@@ -186,7 +185,6 @@ void SceneBasic_Uniform::update( float t )
         prog.setUniform("CutOff", cutOff);
 
         char c;
-
 
         std::cin.clear();
         std::cin.ignore();

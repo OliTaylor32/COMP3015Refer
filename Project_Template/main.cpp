@@ -10,7 +10,5 @@ int main(int argc, char* argv[])
 	std::unique_ptr<Scene> scene;
 
 	scene = std::unique_ptr<Scene>(new SceneBasic_Uniform());
-
-
 	return runner.run(*scene);
 }
